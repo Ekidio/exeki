@@ -1,0 +1,7 @@
+dist/
+.build/
+.icon/
+.dmg/
+.venv/
+.DS_Store
+.vendor/

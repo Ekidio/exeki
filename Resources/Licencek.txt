@@ -1,0 +1,47 @@
+EXEKI
+=====
+
+Egyszerű Windows- és DOS-programfuttató macOS-re.
+
+Licenc:     GNU General Public License 3.0 (GPL-3.0)
+Forráskód:  https://github.com/Ekidio/exeki
+
+
+Felhasznált szoftverek
+----------------------
+
+Az EXEKI a programok futtatásához két szabad szoftvert tölt le, amikor először
+szükség van rájuk: a Windows programokhoz a Wine-t, a DOS programokhoz a
+DOSBox Staginget. Ezek nem részei az EXEKI alkalmazásnak, külön letöltött
+összetevők.
+
+Wine
+  Licenc:     GNU Lesser General Public License 2.1 vagy újabb (LGPL-2.1+)
+              https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
+  Forráskód:  https://gitlab.winehq.org/wine/wine
+  Weboldal:   https://www.winehq.org
+
+macOS Wine build (Wine Devel 11.17)
+  Készítő:    Gcenx
+  Forrás:     https://github.com/Gcenx/macOS_Wine_builds
+
+MoltenVK (a Wine buildben található)
+  Licenc:     Apache License 2.0
+  Forráskód:  https://github.com/KhronosGroup/MoltenVK
+
+
+DOSBox Staging 0.83.0
+  Licenc:     GNU General Public License 2.0 vagy újabb (GPL-2.0+)
+              https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+  Forráskód:  https://github.com/dosbox-staging/dosbox-staging
+
+Sparkle (az automatikus frissítéshez, az alkalmazás része)
+  Licenc:     MIT
+  Forráskód:  https://github.com/sparkle-project/Sparkle
+
+
+A Wine, a DOSBox Staging és a hozzájuk tartozó összetevők a fenti licencek szerint szabadon
+terjeszthetők. A pontos forráskód a fenti címeken érhető el.
+
+A Microsoft, a Windows és az .exe formátum a Microsoft Corporation védjegyei.
+Az EXEKI nem áll kapcsolatban a Microsofttal, sem az Apple-lel.
