@@ -3,6 +3,7 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject private var runner: ProgramRunner
     @EnvironmentObject private var setup: SetupManager
+    @ObservedObject private var library = ProgramLibrary.shared
     @AppStorage("showLog") private var showLog = false
     @State private var dropTargeted = false
     @State private var confirmReset = false
@@ -26,16 +27,24 @@ struct ContentView: View {
                     .padding(.horizontal, 16)
                     .padding(.bottom, 12)
             }
+            if !library.programs.isEmpty {
+                programsSection
+                    .frame(maxHeight: showLog ? 190 : .infinity)
+            }
             if showLog {
                 Divider()
                 logView
-            } else {
-                Spacer(minLength: 0)
+            } else if library.programs.isEmpty {
+                Text("A telepített programjaid itt fognak megjelenni.")
+                    .font(.callout)
+                    .foregroundStyle(.tertiary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             Divider()
             statusBar
         }
         .toolbar { toolbar }
+        .onAppear { library.refresh() }
         .confirmationDialog("Visszaállítod a Windows környezetet?", isPresented: $confirmReset) {
             Button("Visszaállítás", role: .destructive) { setup.resetWindows() }
         } message: {
@@ -46,17 +55,18 @@ struct ContentView: View {
     // MARK: - Drop zone
 
     private var dropZone: some View {
-        VStack(spacing: 10) {
+        let compact = !library.programs.isEmpty
+        return VStack(spacing: compact ? 6 : 10) {
             Image(systemName: dropTargeted ? "arrow.down.app.fill" : "arrow.down.app")
-                .font(.system(size: 42, weight: .light))
+                .font(.system(size: compact ? 28 : 42, weight: .light))
                 .foregroundStyle(dropTargeted ? Color.accentColor : .secondary)
             Text("Húzd ide a Windows vagy DOS programot")
-                .font(.title3.weight(.semibold))
+                .font(compact ? .headline : .title3.weight(.semibold))
             Text(".exe, .com, .msi vagy .bat — vagy kattints a kiválasztáshoz")
-                .font(.callout)
+                .font(compact ? .caption : .callout)
                 .foregroundStyle(.secondary)
         }
-        .frame(maxWidth: .infinity, minHeight: 170)
+        .frame(maxWidth: .infinity, minHeight: compact ? 110 : 170)
         .background(
             RoundedRectangle(cornerRadius: 14)
                 .fill(dropTargeted ? Color.accentColor.opacity(0.12) : Color.secondary.opacity(0.06))
@@ -113,6 +123,34 @@ struct ContentView: View {
             RoundedRectangle(cornerRadius: 10)
                 .fill((notice.kind == .error ? Color.orange : Color.green).opacity(0.12))
         )
+    }
+
+    // MARK: - Installed programs
+
+    private var programsSection: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Programjaim")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 16)
+            ScrollView {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 112), spacing: 4)], spacing: 4) {
+                    ForEach(library.programs) { program in
+                        ProgramTile(
+                            program: program,
+                            icon: library.icon(for: program),
+                            isRunning: runner.running.contains {
+                                $0.name == program.name || $0.name == program.exe.lastPathComponent
+                            },
+                            onRun: { runner.runInstalled(program) },
+                            onReveal: { NSWorkspace.shared.activateFileViewerSelecting([program.exe]) },
+                            onRemove: { library.remove(program) })
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.bottom, 12)
+            }
+        }
     }
 
     // MARK: - Running programs
@@ -238,6 +276,11 @@ struct ContentView: View {
             .help("Minden futó program leállítása")
 
             Menu {
+                Button("Program hozzáadása a listához…") { library.chooseAndPin() }
+                if library.hiddenCount > 0 {
+                    Button("Elrejtett programok visszahozása (\(library.hiddenCount))") { library.showHidden() }
+                }
+                Divider()
                 Button("Legyen ez az .exe fájlok megnyitója") { runner.makeDefaultHandler() }
                 Divider()
                 Button("Futtatás a DOS-motorral…") { runner.chooseAndRun(forceEngine: .dos) }
@@ -254,6 +297,61 @@ struct ContentView: View {
             } label: {
                 Label("Továbbiak", systemImage: "ellipsis.circle")
             }
+        }
+    }
+}
+
+/// One program in the "Programjaim" grid: its own icon and name; a click starts it.
+private struct ProgramTile: View {
+    let program: InstalledProgram
+    let icon: NSImage
+    let isRunning: Bool
+    let onRun: () -> Void
+    let onReveal: () -> Void
+    let onRemove: () -> Void
+    @State private var hovering = false
+
+    var body: some View {
+        // A real Button (not a tap gesture) so VoiceOver and the keyboard can start programs too.
+        Button(action: onRun) {
+            VStack(spacing: 6) {
+                Image(nsImage: icon)
+                    .resizable()
+                    .interpolation(.high)
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 48, height: 48)
+                Text(program.name)
+                    .font(.callout)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+                    .frame(height: 34, alignment: .top)
+            }
+            .frame(width: 104)
+            .padding(.vertical, 10)
+            .padding(.horizontal, 4)
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(hovering ? Color.secondary.opacity(0.12) : Color.clear)
+            )
+            .overlay(alignment: .topTrailing) {
+                if isRunning {
+                    Circle()
+                        .fill(Color.green)
+                        .frame(width: 8, height: 8)
+                        .padding(8)
+                }
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering = $0 }
+        .help("\(program.name) indítása")
+        .accessibilityLabel(isRunning ? "\(program.name), fut" : program.name)
+        .contextMenu {
+            Button("Indítás", action: onRun)
+            Button("Megjelenítés a Finderben", action: onReveal)
+            Divider()
+            Button(program.isPinned ? "Eltávolítás a listából" : "Elrejtés a listából", action: onRemove)
         }
     }
 }

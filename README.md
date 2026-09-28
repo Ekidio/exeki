@@ -40,7 +40,8 @@ Ez összesen néhány perc. A DOS-motort (kb. 45 MB) csak az első DOS program i
 ## Használat
 
 - **Húzd rá** a programot az ablakra vagy a Dockban lévő ikonra, vagy kattints a mezőre, és válaszd ki. Hogy Windows vagy DOS program, azt az EXEKI magától eldönti.
-- **Telepítők** (`setup.exe`, `.msi`): futtasd őket ugyanígy. A telepített program a **C: meghajtó** gombbal megnyitható mappába kerül.
+- **Telepítők** (`setup.exe`, `.msi`): futtasd őket ugyanígy. A telepítés után a program magától megjelenik a **Programjaim** listában, a saját ikonjával. Onnan egy kattintással indítható.
+- **Programjaim:** jobb kattintás egy programon: *Megjelenítés a Finderben* vagy *Elrejtés a listából*. Telepítés nélküli `.exe`-t vagy DOS játékot a **⋯ → Program hozzáadása a listához…** menüponttal tehetsz a listába.
 - **Dupla kattintás az .exe fájlokra:** **⋯ → Legyen ez az .exe fájlok megnyitója**.
 - **Ha rossz motor indulna:** **⋯ → Futtatás a DOS-motorral… / Futtatás a Windows-motorral…**
 - **Ha valami elromlott:** **⋯ → Windows környezet visszaállítása…**. Ez tiszta lappal indul, a régi C: meghajtó a Kukába kerül.

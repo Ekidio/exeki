@@ -122,6 +122,16 @@ final class ProgramRunner: ObservableObject {
         }
     }
 
+    /// Starts a program from the "Programjaim" list with its shortcut's folder and arguments.
+    func runInstalled(_ program: InstalledProgram) {
+        if program.isPinned {
+            run(program.exe)
+            return
+        }
+        launch(Engine.wine.executable, [program.exe.path] + program.arguments, name: program.name, isDOS: false,
+               directory: program.workingDirectory ?? program.exe.deletingLastPathComponent())
+    }
+
     func runWithWine(_ url: URL) {
         let windowsPath = "Z:" + url.path.replacingOccurrences(of: "/", with: "\\")
         let args: [String]
@@ -276,6 +286,8 @@ final class ProgramRunner: ObservableObject {
     private func finished(_ id: UUID, status: Int32, signaled: Bool) {
         guard let index = running.firstIndex(where: { $0.id == id }) else { return }
         let program = running.remove(at: index)
+        // An installer may have just added a program to the Start Menu.
+        ProgramLibrary.shared.refresh()
         let tail = outputTails.removeValue(forKey: id) ?? []
         if signaled {
             info("■ Leállítva: \(program.name)")
